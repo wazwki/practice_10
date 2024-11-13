@@ -1,0 +1,20 @@
+filebeat.inputs:
+  - type: filestream
+    enabled: true
+    paths:
+      - /var/log/myapp/*.log
+    json:
+      message_key: message
+      keys_under_root: true
+    fields:
+      log_source: user-service
+    fields_under_root: true
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_docker_metadata: ~
+  - add_cloud_metadata: ~

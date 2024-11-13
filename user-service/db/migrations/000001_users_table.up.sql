@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS users_table(
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(150) UNIQUE,
+    name TEXT NOT NULL
+);
