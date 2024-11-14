@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: dockerfile
+    container_name: user-service
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - HOST=${HOST}
+      - US_PORT=${US_PORT}
+      - KAFKA_PORT=${KAFKA_PORT}
+    depends_on:
+      - postgres
+      - zookeeper
+      - kafka
+    ports:
+      - "${US_PORT}:${US_PORT}"
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: dockerfile
+    container_name: notification-service
+    environment:
+      - KAFKA_PORT=${KAFKA_PORT}
+    depends_on:
+      - user-service
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - "${KAFKA_ZOOKEEPER_PORT}:${KAFKA_ZOOKEEPER_PORT}"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=${KAFKA_ZOOKEEPER_ALLOW_ANONYMOUS_LOGIN}
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
+    environment:
+      - KAFKA_BROKER_ID=${KAFKA_BROKER_ID}
+      - KAFKA_ZOOKEEPER_CONNECT=${KAFKA_ZOOKEEPER_CONNECT}
+      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      - KAFKA_ADVERTISED_LISTENERS=${KAFKA_ADVERTISED_LISTENERS}
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+    depends_on:
+      - zookeeper
+
+volumes:
+  pgdata:

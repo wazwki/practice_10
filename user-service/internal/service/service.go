@@ -1,10 +1,10 @@
 package service
 
 import (
-	"time"
+	"log/slog"
 	"user-service/internal/models"
 	"user-service/internal/repository"
-	"user-service/pkg/metrics"
+	"user-service/pkg/kafka"
 )
 
 type ServiceInterface interface {
@@ -23,41 +23,42 @@ func NewService(repo repository.StorageInterface) ServiceInterface {
 }
 
 func (s *Service) GetUsers() ([]*models.User, error) {
-	start := time.Now()
 	users, err := s.repo.Get()
 	if err != nil {
 		return nil, err
 	}
-	metrics.ServiceDuration.WithLabelValues("GetUser").Observe(time.Since(start).Seconds())
 	return users, nil
 }
 
 func (s *Service) CreateUser(user *models.User) error {
-	start := time.Now()
 	err := s.repo.Create(user)
 	if err != nil {
 		return err
 	}
-	metrics.ServiceDuration.WithLabelValues("CreateUser").Observe(time.Since(start).Seconds())
+
+	if err := kafka.InitProducer(); err != nil {
+		slog.Error("Fail init produser", slog.Any("error", err), slog.String("module", "user-service"))
+	}
+	defer kafka.CloseProducer()
+	if err := kafka.SendMessage("registration-topic", user.Email, 0); err != nil {
+		slog.Error("Fail send message to kafka", slog.Any("error", err), slog.String("module", "user-service"))
+	}
+
 	return nil
 }
 
 func (s *Service) UpdateUser(id string, user *models.User) error {
-	start := time.Now()
 	err := s.repo.Update(user, id)
 	if err != nil {
 		return err
 	}
-	metrics.ServiceDuration.WithLabelValues("UpdateUser").Observe(time.Since(start).Seconds())
 	return nil
 }
 
 func (s *Service) DeleteUser(id string) error {
-	start := time.Now()
 	err := s.repo.Delete(id)
 	if err != nil {
 		return err
 	}
-	metrics.ServiceDuration.WithLabelValues("DeleteUser").Observe(time.Since(start).Seconds())
 	return nil
 }

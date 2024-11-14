@@ -8,7 +8,7 @@ import (
 var Logger *slog.Logger
 
 func LogInit() {
-	file, err := os.OpenFile("user-service.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("notification-service.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}

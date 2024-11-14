@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,12 +17,10 @@ import (
 	"user-service/pkg/logger"
 
 	"github.com/joho/godotenv"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
 	logger.LogInit()
-	slog.SetDefault(logger.Logger)
 
 	if err := godotenv.Load(".env"); err != nil {
 		slog.Error("Fail load env", slog.Any("error", err), slog.String("module", "user-service"))
@@ -35,7 +32,7 @@ func main() {
 		host = "127.0.0.1"
 	}
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("US_PORT")
 	if port == "" {
 		port = "8080"
 	}
@@ -72,8 +69,6 @@ func main() {
 	mux.HandleFunc("PUT /users/{id}", handlers.UpdateHandler)
 	mux.HandleFunc("DELETE /users/{id}", handlers.DeleteHandler)
 	mux.HandleFunc("POST /users", handlers.CreateHandler)
-
-	mux.Handle("/metrics", promhttp.Handler())
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
