@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  live-service:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: live-service
+    environment:
+      - HOST=${HOST}
+      - PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"

@@ -8,14 +8,7 @@ import (
 var Logger *slog.Logger
 
 func LogInit() {
-	if _, err := os.Stat("logs"); os.IsNotExist(err) {
-		err := os.Mkdir("logs", 0755)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	file, err := os.OpenFile("logs/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("live-service.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
